@@ -1,4 +1,4 @@
-from surgical_tape import surgical_tape_list, eye_retractors_list
+from past_pick_whitelist.surgical_tape import surgical_tape_list, eye_retractors_list
 import pandas as pd
 import os
 import shutil
