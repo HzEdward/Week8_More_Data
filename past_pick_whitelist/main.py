@@ -10,17 +10,15 @@ import sys
 
     trial.py contain the following 3 functions:
 
-    1. check_list(surgical_tape_list, eye_retractors_list)
-    从data.csv文件找到和surgical_tape_list和eye_retractors_list中的元素具有相同img_path的行，
+    1. check_list(surgical_tape_list, eye_retractors_list) 只是起到了检查的功能
+    从data.csv文件找到和surgical_tape_list和eye_retractors_list中的元素具有相同img_path的行
     并且查看这些行在surgical_tape或eye_retractors列是否为0。
 
-    2. copy_image(surgical_tape_list, eye_retractors_list)
+    2. copy_image(surgical_tape_list, eye_retractors_list) 非常有用
     将surgical_tape_list和eye_retractors_list中的元素对应的图片和mask复制到不同的文件夹中。
 
     3. train_valid_split(folder_path, train_percentage, valid_percentage)
     将folder_path中的子文件夹按照train_percentage和valid_percentage的比例分配到train和valid文件夹中。
-
-
 '''
 def check_list(surgical_tape_list, eye_retractors_list):
     """

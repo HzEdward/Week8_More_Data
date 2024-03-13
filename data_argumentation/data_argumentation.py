@@ -12,6 +12,8 @@ class DataArgumentation:
 
     Args:
         folder_path (str): The path to the folder containing the images.
+        本类只能处理单个文件夹下的图片，不能处理多个文件夹下的图片。
+        如果要处理多个文件夹下的图片，需要在外部调用本类的方法。
 
     Attributes:
         folder_path (str): The path to the folder containing the images.
@@ -202,7 +204,6 @@ if __name__ == "__main__":
                             folder_path = os.path.join(dataset_path, folder, sub_folder, sub_sub_folder)
                             # print("folder_path:", folder_path)
                             data_argumentation = DataArgumentation(folder_path)
-                            data_argumentation.data_augmentation()
                             # print(f"Data augmentation completed for ({folder}/{sub_folder}/{sub_sub_folder}) folder.")
                             # print("---------------------------------------------------")
 
