@@ -47,11 +47,6 @@ class DataArgumentation:
         self.noise_path = os.path.join(self.base_path, self.folder_path_pure+"_(noise)")
         self.blur_path = os.path.join(self.base_path, self.folder_path_pure+"_(blur)")
         self.original_path = os.path.join(self.base_path, self.folder_path_pure+"_(original)")
-
-    # def create_directories(self):
-    #     for directory in [self.flip_path, self.rotate_path, self.brightness_path, self.contrast_path, self.noise_path, self.blur_path]:
-    #         if not os.path.exists(directory):
-    #             os.makedirs(directory)
     
     def create_directories(self, path):
         if not os.path.exists(path):
@@ -160,6 +155,17 @@ class DataArgumentation:
 
 # 测试两张RGB图片是否相同
 def check_same_image(img1_path, img2_path):
+    """
+    Check if two images are the same.
+
+    Args:
+        img1_path (str): The file path of the first image.
+        img2_path (str): The file path of the second image.
+
+    Returns:
+        bool: True if the images are the same, False otherwise.
+    """
+    
     img1 = cv2.imread(img1_path)
     img2 = cv2.imread(img2_path)
 
