@@ -22,6 +22,7 @@ import sys
 import cv2
 import numpy as np
 import random
+import torch
 
 
 from data_argumentation.data_argumentation import DataArgumentation
@@ -40,7 +41,7 @@ def get_image_list(class_name, data_csv, num):
 
 # 输入：获取完成的图像路径列表之后，将列表中的图片以及对应的mask复制到不同的文件夹中。
 # 输出：创建文件夹，将图像和mask复制到不同的文件夹中。
-def copy_image(image_list, class_name):
+def copy_image_unused(image_list, class_name):
     for img in image_list:
     
         img_name = img.split('/')[-1]
@@ -49,8 +50,6 @@ def copy_image(image_list, class_name):
         shutil.copy(img, '.whitelist_pick/test/whitelist/' + class_name + '/' + img_name)
         shutil.copy(img, '.whitelist_pick/train/whitelist/' + class_name + '/' + mask_name)
         shutil.copy(img, '.whitelist_pick/test/whitelist/' + class_name + '/' + mask_name)
-   
-
 
 def copy_image(class_name: str, list_name: list):
     """
@@ -82,6 +81,12 @@ class DataArgumentation_new(DataArgumentation):
     def __init__(self, folder_path):
         super().__init__(folder_path)
 
+        # is there a better way to do this? such as for
+        paths = ["shifted", "rotated", "flipped", "replaced", "original"]
+        for path in paths:
+            setattr(self, path+"_path", os.path.join(self.folder_path, path))
+
+
     def shift(self, image):
         """
         对给定的图像进行微移动。这是一种数据增强的方式，可以模拟mislabelled mask的情况。
@@ -102,6 +107,50 @@ class DataArgumentation_new(DataArgumentation):
         shifted_image = np.roll(image, random_x, axis=1)
         shifted_image = np.roll(shifted_image, random_y, axis=0)
         return shifted_image
+    
+
+    def replace_image(self, be_replaced_path: str):
+        """
+            
+        用随机选择的图像替换给定路径的图像。
+
+        参数:
+            be_replaced_path (str): 要替换的图像的路径。
+
+        返回:
+            numpy.ndarray: 替换后的图像作为NumPy数组。
+        """
+        # Rest of the code...
+    def replace_image(self, be_replaced_image_path: str):
+        """
+            
+        用随机选择的图像替换给定路径的图像。
+
+        参数:
+            be_replaced_path (str): 要替换的图像的路径。
+
+        返回:
+            numpy.ndarray: 替换后的图像作为NumPy数组。
+        """
+
+        # /test/image_pair_1/image_Video1_frame000090.png to /test/
+        white_or_black_directory = "./"+be_replaced_image_path.split("/")[-3]+"/"
+        print("be_replaced_path: ", be_replaced_image_path)
+        replace_file_list = os.listdir(white_or_black_directory)
+        print("replace_file_list: ", replace_file_list)
+        # remove hidden files
+        replace_file_list = [file for file in replace_file_list if not file.startswith(".")]
+        replace_file_list = [file for file in replace_file_list if file.startswith("image_")]
+        # random choice except be_replaced_path.split("/")[-2]
+        replace_file_list = [file for file in replace_file_list if file != be_replaced_image_path.split("/")[-2]]
+        print("final replace_file_list: ", replace_file_list)
+        replace_file_name = random.choice(replace_file_list)
+        replace_file_path = os.path.join("./"+be_replaced_image_path.split("/")[-3]+"/"+replace_file_name)
+        print("replace_file_path: ", replace_file_path)
+        replace_image = cv2.imread(replace_file_path)
+        return replace_image
+    
+
 
     def new_data_argumentation(self):
         """
@@ -116,19 +165,26 @@ class DataArgumentation_new(DataArgumentation):
         Raises:
             None
         """
+        torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Ensure directories are created before performing data augmentation        
         file_list = os.listdir(self.folder_path) 
-        # remove hidden files
         file_list = [file for file in file_list if not file.startswith(".")]
+        print("file_list: ", file_list)
+
+
         
         for file_name in file_list:
             file_path = os.path.join(self.folder_path, file_name)
+
             condition = {"condition 1": file_name.endswith('.jpg') or file_name.endswith('.png'),
                          "condition 2": file_name.startswith(".") == False,
                          "condition 3": file_name.startswith("image_")}
             
             if all(condition.values()):
+                image_path = os.path.join(self.folder_path, file_name)
+                print(f"Data augmentation started for {image_path}.")
+
                 image = cv2.imread(file_path)
 
                 # 新方法一：图片微移动
@@ -151,16 +207,13 @@ class DataArgumentation_new(DataArgumentation):
                 self.create_directories(self.flip_path)
                 cv2.imwrite(flipped_file_path, flipped_image)
 
-                # 新方法四：直接和另外一张图片对换
-                random_image = random.choice(file_list)
-                random_image_path = os.path.join(self.folder_path, random_image)
-                random_image = cv2.imread(random_image_path)
-                swapped_image = self.swap(image, random_image)
-                swapped_file_path = os.path.join(self.swap_path, file_name_split + "_swapped.png")
-                self.create_directories(self.swap_path)
-                cv2.imwrite(swapped_file_path, swapped_image)
+                # 新方法四：将另外一个类别的image(e.g. 在../层另一个文件夹的"image_"开头的png中 替换当前文件夹下的image图像，这很符合mislabelled mask缺少帧数而导致的情况
+                replace_image = self.replace_image(file_path)
+                replace_file_path = os.path.join(self.replace_path, file_name_split + "_replaced.png")
+                self.create_directories(self.replace_path)
+                cv2.imwrite(replace_file_path, replace_image)
 
-                # 不变copy
+                # 不变copy,用做比较
                 original_file_path = os.path.join(self.original_path, file_name_split+"_original.png")
                 self.create_directories(self.original_path)
                 cv2.imwrite(original_file_path, image)
@@ -189,14 +242,15 @@ class DataArgumentation_new(DataArgumentation):
 
 
 if "__main__" == __name__:
-    Secondary_Knife_List = get_image_list("Secondary Knife", "./data.csv", 14) 
-    copy_image("Secondary_Knife", Secondary_Knife_List )
-    # for every subfolder in Secondary_Knife, do data argumentation
-    for subfolder in os.listdir("./Secondary_Knife"):
-        subfolder_path = os.path.join("./Secondary_Knife", subfolder)
-        if os.path.isdir(subfolder_path):
-            Secondary_Knife_Folder = DataArgumentation_new(subfolder_path)
-            Secondary_Knife_Folder.new_data_argumentation()
+    Secondary_Knife_Folder = DataArgumentation_new("./test/image_pair_1")
+    print("Folder Path:", Secondary_Knife_Folder.folder_path)
+    print("Shifted Path:", Secondary_Knife_Folder.shifted_path)
+
+
+
+
+
+
 
 
 

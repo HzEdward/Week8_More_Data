@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import random
 import sys
+import torch
 
 import torchvision.transforms as transforms
 
@@ -84,6 +85,8 @@ class DataArgumentation:
 
 #TODO：一边制造数据增强之后的图片，一边创建新的文件夹，并且把文件夹创建在和原文件夹同一个目录下（同一级别）
     def data_augmentation(self):
+        torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
         # Ensure directories are created before performing data augmentation        
         file_list = os.listdir(self.folder_path) 
         # remove hidden files
