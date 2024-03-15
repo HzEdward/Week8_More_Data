@@ -146,6 +146,7 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
         pair_folder_layer = [i for i in pair_folder_layer if i.startswith("image_")]
         pair_folder_layer = [i for i in pair_folder_layer if "mis" not in i]
         pair_folder_layer = [i for i in pair_folder_layer if i != original_image_path.split("/")[-2]]
+
         substitute_folder_name = random.choice(pair_folder_layer)
         substitute_folder_full_path = os.path.join("./"+original_image_path.split("/")[-3]+"/"+substitute_folder_name)
         for image in os.listdir(substitute_folder_full_path):
@@ -265,12 +266,47 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
             else:
                 continue
 
+
+def remove_mis_files(folder_path: str):
+    """
+    删除文件夹中的mis文件夹
+
+    Args:
+        folder_path (str): 要删除含有mis文件夹的文件夹路径。
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
+    for file in os.listdir(folder_path):
+        if file.__contains__("mis"):
+            shutil.rmtree(os.path.join(folder_path, file))
+        else:
+            continue
+    
+        
 if "__main__" == __name__:
+    remove_mis_files("./test")
+    sys.exit()
+
+
     for file in os.listdir("./test"):
-        print(file)
-        sys.exit()
-        Secondary_Knife_Folder = DataArgumentation_art_mislabelled(file)
-        Secondary_Knife_Folder.new_data_argumentation()
+        condition = {
+                    "condition 1": lambda file: not file.startswith("."),
+                    # contain no "mis" e.g. "hello_mis_shifted", "mis_rotated"
+                    "condition 2": lambda file: "mis" not in file
+                    }            
+        if all(cond(file) for cond in condition.values()):
+            full_file_path= os.path.join("./test", file)
+            print("full_file_path: ", full_file_path)
+            Secondary_Knife_Folder = DataArgumentation_art_mislabelled(full_file_path)
+            Secondary_Knife_Folder.new_data_argumentation()
+        else:
+            continue
+
+    
 
     
 
