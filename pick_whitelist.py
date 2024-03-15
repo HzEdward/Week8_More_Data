@@ -104,8 +104,8 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
             None
         """
         # 随机生成微移动的距离
-        random_x = random.randint(-10, 10)
-        random_y = random.randint(-10, 10)
+        random_x = random.randint(-20, 20)
+        random_y = random.randint(-20, 20)
         # 对图像进行微移动
         shifted_image = np.roll(image, random_x, axis=1)
         shifted_image = np.roll(shifted_image, random_y, axis=0)
@@ -162,7 +162,7 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
         
         for file_name in file_list:
             file_path = os.path.join(self.folder_path, file_name)
-            print("file_path: ", file_path) # file path= ./test/image_pair_1/image_Video1_frame000090.png
+           # file path= ./test/image_pair_1/image_Video1_frame000090.png
 
             condition = {"condition 1": file_name.endswith('.jpg') or file_name.endswith('.png'),
                          "condition 2": not file_name.startswith("."),
@@ -173,42 +173,53 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
                 print(f"Data augmentation started for {image_path}.")
 
                 image = cv2.imread(file_path)
+                file_name_split = os.path.splitext(file_name)[0]
+
                 #test/image_pair_1/image_Video1_frame000090.png to test/image_pair_1/label_Video1_frame000090.png
-                mask_path = file_path.split("/")[-1].replace("image_", "label_")
-                mask_path = os.path.join(self.folder_path, mask_path)
+                mask_path = os.path.join(self.folder_path, file_name_split.replace("image_", "label_")+ ".png")
 
                 # 新方法一：图片微移动
                 shifted_image = self.shift(image)
-                file_name_split = file_name.split(".")[0]
-                shifted_file_path = os.path.join(self.mis_shifted_path
-                                                 , file_name_split + '_shifted.png')
-                self.create_directories(self.mis_shifted_path)
+                image_pair_path = self.folder_path.split("/")[-1] + "_mis_shifted"
+                shifted_file_path = os.path.join(self.middle_folder_path, image_pair_path, file_name_split + '_shifted.png')
+                # Create directories if they don't exist
+                self.create_directories(os.path.join(self.middle_folder_path, image_pair_path))
+                # Save shifted image
                 cv2.imwrite(shifted_file_path, shifted_image)
-                # at the same time, write the mask into the same folder
-                self.mask_image_path = os.path.join(self.mis_shifted_path,
-                                                    file_name_split.replace("image_", "label_") + "_shifted.png")
                 print("shifted_file_path: ", shifted_file_path)
-                print("self.mask_image_path: ", self.mask_image_path)
-                print("file_name_split: ", file_name_split)
-                shutil.copy(mask_path, self.mask_image_path)
-                print("Create a new image: ", shifted_file_path)
-                sys.exit()
-
+                # Save mask image
+                mask_image_path = os.path.join(self.middle_folder_path, image_pair_path, file_name_split.replace("image_", "label_") + "_shifted.png")
+                shutil.copy(mask_path, mask_image_path)
+                # Check if shifted image is the same as the original image
+                check_same_image(file_path, shifted_file_path)
 
                 # 新方法二：图片微旋转，与旧方法直接旋转代码一样
                 angle = abs(random.uniform(-10, 10))
                 rotated_image = self.rotate(image, angle)
-                rotated_file_path = os.path.join(self.mis_rotated_path,
-                                                 file_name_split + "_rotated.png")
-                self.create_directories(self.mis_rotated_path)
-                cv2.imwrite(rotated_file_path, rotated_image)
+                image_pair_path = self.folder_path.split("/")[-1] + "_mis_rotated"
+                rotated_image_path = os.path.join(self.middle_folder_path, image_pair_path, file_name_split + '_rotated.png')
+                self.create_directories(os.path.join(self.middle_folder_path, image_pair_path))
+                cv2.imwrite(rotated_image_path, rotated_image)
+                # Save mask image
+                mask_image_path = os.path.join(self.middle_folder_path, image_pair_path, file_name_split.replace("image_", "label_") + "_rotated.png")
+                shutil.copy(mask_path, mask_image_path)
+                # Check if rotated image is the same as the original image
+                check_same_image(file_path, rotated_image_path)
+                
 
                 # 新方法三：图片镜像翻转
                 flipped_image = self.flip(image)
-                flipped_file_path = os.path.join(self.mis_flipped_path, 
-                                                 file_name_split + '_flipped.png')
-                self.create_directories(self.mis_flipped_path)
+                image_pair_path = self.folder_path.split("/")[-1] + "_mis_flipped"
+                flipped_file_path = os.path.join(self.middle_folder_path, image_pair_path, file_name_split + '_flipped.png')
+                self.create_directories(os.path.join(self.middle_folder_path, image_pair_path))
                 cv2.imwrite(flipped_file_path, flipped_image)
+                # Save mask image
+                mask_image_path = os.path.join(self.middle_folder_path, image_pair_path, file_name_split.replace("image_", "label_") + "_flipped.png")
+                shutil.copy(mask_path, mask_image_path)
+                # Check if flipped image is the same as the original image  
+                check_same_image(file_path, flipped_file_path)
+                sys.exit()
+
 
                 # 新方法四：将另外一个类别的image(e.g. 在../层另一个文件夹的"image_"开头的png中 替换当前文件夹下的image图像，这很符合mislabelled mask缺少帧数而导致的情况
                 replace_image = self.replace_image(file_path)
