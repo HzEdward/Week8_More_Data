@@ -89,7 +89,6 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
         self.mis_flipped_path = os.path.join(self.middle_folder_path, "mis_flipped")
         self.mis_replaced_path = os.path.join(self.middle_folder_path, "mis_replaced")
 
-
     def shift(self, image):
         """
         对给定的图像进行微移动。这是一种数据增强的方式，可以模拟mislabelled mask的情况。
@@ -111,36 +110,53 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
         shifted_image = np.roll(shifted_image, random_y, axis=0)
         return shifted_image
     
-    def replace_image(self, be_replaced_image_path: str):
+    def replace_image(self, original_image_path: str):
         """
             
-        用随机选择的图像替换给定路径的图像。
+        给定一个图像的路径，把这个图像路径替换成另图像
 
         参数:
-            be_replaced_path (str): 要替换的图像的路径。
+            be_replaced_path (str): 要替换的图像image的路径。
+            (请注意，是图像的路径)
 
         返回:
             numpy.ndarray: 替换后的图像作为NumPy数组。
         """
+        whiteblack_folder_layer = "./"+original_image_path.split("/")[-3]+"/"
+        pair_folder_layer = os.listdir(whiteblack_folder_layer)
 
-        # /test/image_pair_1/image_Video1_frame000090.png to /test/
-        white_or_black_directory = "./"+be_replaced_image_path.split("/")[-3]+"/"
-        print("be_replaced_path: ", be_replaced_image_path)
-        replace_file_list = os.listdir(white_or_black_directory)
-        print("replace_file_list: ", replace_file_list)
-        # remove hidden files
-        replace_file_list = [file for file in replace_file_list if not file.startswith(".")]
-        replace_file_list = [file for file in replace_file_list if file.startswith("image_")]
-        # random choice except be_replaced_path.split("/")[-2]
-        replace_file_list = [file for file in replace_file_list if file != be_replaced_image_path.split("/")[-2]]
-        print("final replace_file_list: ", replace_file_list)
-        replace_file_name = random.choice(replace_file_list)
-        replace_file_path = os.path.join("./"+be_replaced_image_path.split("/")[-3]+"/"+replace_file_name)
-        print("replace_file_path: ", replace_file_path)
-        replace_image = cv2.imread(replace_file_path)
-        print("replace_image: ", replace_image)
-        return replace_image
-    
+
+        # 定义过滤条件
+        # filter_conditions = [
+        #     lambda file: not file.startswith("."),
+        #     lambda file: file.startswith("image_"),
+        #     lambda file: "mis" not in file,
+        #     lambda file: file != original_image_path.split("/")[-2]
+        # ]
+        # # 应用过滤条件
+        # for condition in filter_conditions:
+        #     pair_folder_layer = [file for file in pair_folder_layer if condition(file)]
+
+        # print("pair_folder_layer: ", pair_folder_layer)
+
+
+        # pair_folder_layer is made by file
+
+        pair_folder_layer = [i for i in pair_folder_layer if not i.startswith(".")]
+        pair_folder_layer = [i for i in pair_folder_layer if i.startswith("image_")]
+        pair_folder_layer = [i for i in pair_folder_layer if "mis" not in i]
+        pair_folder_layer = [i for i in pair_folder_layer if i != original_image_path.split("/")[-2]]
+        substitute_folder_name = random.choice(pair_folder_layer)
+        substitute_folder_full_path = os.path.join("./"+original_image_path.split("/")[-3]+"/"+substitute_folder_name)
+        for image in os.listdir(substitute_folder_full_path):
+            if not image.startswith(".") and image.startswith("image_") and "mis" not in image:
+                substitute_image_full_path = os.path.join(substitute_folder_full_path, image)
+                subsitute_image = cv2.imread(substitute_image_full_path)
+            else:
+                continue
+            
+        return subsitute_image
+      
     def new_data_argumentation(self):
         """
         对给定的文件夹中的图像进行数据增强。但是数据增强的方式更加贴近于模拟mislabelled mask的情况
@@ -186,7 +202,6 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
                 self.create_directories(os.path.join(self.middle_folder_path, image_pair_path))
                 # Save shifted image
                 cv2.imwrite(shifted_file_path, shifted_image)
-                print("shifted_file_path: ", shifted_file_path)
                 # Save mask image
                 mask_image_path = os.path.join(self.middle_folder_path, image_pair_path, file_name_split.replace("image_", "label_") + "_shifted.png")
                 shutil.copy(mask_path, mask_image_path)
@@ -205,7 +220,6 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
                 shutil.copy(mask_path, mask_image_path)
                 # Check if rotated image is the same as the original image
                 check_same_image(file_path, rotated_image_path)
-                
 
                 # 新方法三：图片镜像翻转
                 flipped_image = self.flip(image)
@@ -218,21 +232,24 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
                 shutil.copy(mask_path, mask_image_path)
                 # Check if flipped image is the same as the original image  
                 check_same_image(file_path, flipped_file_path)
-                sys.exit()
-
 
                 # 新方法四：将另外一个类别的image(e.g. 在../层另一个文件夹的"image_"开头的png中 替换当前文件夹下的image图像，这很符合mislabelled mask缺少帧数而导致的情况
                 replace_image = self.replace_image(file_path)
-                replace_file_path = os.path.join(self.mis_replaced_path,
-                                                  file_name_split + "_replaced.png")
-                self.create_directories(self.mis_replaced_path)
-                cv2.imwrite(replace_file_path, replace_image)
+                image_pair_path = self.folder_path.split("/")[-1] + "_mis_replaced"
+                replaced_file_path = os.path.join(self.middle_folder_path, image_pair_path, file_name_split + '_replaced.png')
+                self.create_directories(os.path.join(self.middle_folder_path, image_pair_path))
+                cv2.imwrite(replaced_file_path, replace_image)
+                # Save mask image
+                mask_image_path = os.path.join(self.middle_folder_path, image_pair_path, file_name_split.replace("image_", "label_") + "_replaced.png")
+                shutil.copy(mask_path, mask_image_path)
+                # Check if replaced image is the same as the original image
+                check_same_image(file_path, replaced_file_path)
 
                 # 不变copy,用做比较
-                original_file_path = os.path.join(self.original_path, 
-                                                  file_name_split+"_original.png")
-                self.create_directories(self.original_path)
-                cv2.imwrite(original_file_path, image)
+                # original_file_path = os.path.join(self.original_path, 
+                #                                   file_name_split+"_original.png")
+                # self.create_directories(self.original_path)
+                # cv2.imwrite(original_file_path, image)
 
                 # print(f"Data augmentation completed for {file_name}.")
                 # print("---------------------------------------------------")
@@ -245,23 +262,16 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
                 # print(f"Original image saved as {os.path.basename(original_file_path)}")
                 # print("---------------------------------------------------")
                 # print("---------------------------------------------")
-
-            elif condition["condition 1"] == False:
-                print(f"{file_name} is not a valid image file.")
-
-            elif condition ["condition 2"] == False:
-                print(f"{file_name} is a hidden file.")
-
-            elif condition["condition 3"] == False:
-                print(f"{file_name} is a mask image.")
-
-
-    
-
+            else:
+                continue
 
 if "__main__" == __name__:
-    Secondary_Knife_Folder = DataArgumentation_art_mislabelled("./test/image_pair_1")
-    Secondary_Knife_Folder.new_data_argumentation()
+    for file in os.listdir("./test"):
+        print(file)
+        sys.exit()
+        Secondary_Knife_Folder = DataArgumentation_art_mislabelled(file)
+        Secondary_Knife_Folder.new_data_argumentation()
+
     
 
 
