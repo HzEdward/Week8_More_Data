@@ -156,10 +156,12 @@ def remove_files(folder_path: str, keyword: str):
     Raises:
         None
     """
+    removed_files = []
     if keyword == "mis":
         for file in os.listdir(folder_path):
             if file.__contains__("mis"):
                 shutil.rmtree(os.path.join(folder_path, file))
+                removed_files.append(os.path.join(folder_path, file))
             else:
                 continue
             
@@ -167,6 +169,7 @@ def remove_files(folder_path: str, keyword: str):
         for file in os.listdir(folder_path):
             if not file.__contains__("mis"):
                 shutil.rmtree(os.path.join(folder_path, file))
+                removed_files.append(os.path.join(folder_path, file))
             else:
                 continue
 
