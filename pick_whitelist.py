@@ -187,8 +187,7 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
             
             if all(condition.values()):
                 image_path = os.path.join(self.folder_path, file_name)
-                print("\n")
-                print(f"Data augmentation started for {image_path}.")
+                # print(f"Data augmentation started for {image_path}.")
 
                 image = cv2.imread(file_path)
                 file_name_split = os.path.splitext(file_name)[0]
@@ -210,12 +209,12 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
                 # Check if shifted image is the same as the original image
                 if check_same_image(file_path, shifted_file_path) == True:
                     print("shifted_image is the same as the original image")
+                    sys.exit()
+
 
                 # 新方法二：图片微旋转，与旧方法直接旋转代码一样
                 # make sure the angle is not too small
-                angle = abs(random.uniform(-10, 10))
-                angle =0.1907822277782607
-                print("angle: ", angle)
+                angle = abs(random.uniform(-20, 20))
                 rotated_image = self.rotate(image, angle)
                 image_pair_path = self.folder_path.split("/")[-1] + "_mis_rotated"
                 rotated_image_path = os.path.join(self.middle_folder_path, image_pair_path, file_name_split + '_rotated.png')
@@ -227,6 +226,8 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
                 # Check if rotated image is the same as the original image
                 if check_same_image(file_path, rotated_image_path) == True:
                     print("rotated_image is the same as the original image")
+                    sys.exit()
+
 
                 # 新方法三：图片镜像翻转
                 flipped_image = self.flip(image)
@@ -240,7 +241,7 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
                 # Check if flipped image is the same as the original image  
                 if check_same_image(file_path, flipped_file_path) == True:
                     print("flipped_image is the same as the original image")
-
+                    sys.exit()
 
                 # 新方法四：将另外一个类别的image(e.g. 在../层另一个文件夹的"image_"开头的png中 替换当前文件夹下的image图像，这很符合mislabelled mask缺少帧数而导致的情况
                 replace_image = self.replace_image(file_path)
@@ -254,8 +255,8 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
                 # Check if replaced image is the same as the original image
                 if check_same_image(file_path, replaced_file_path) == True:
                     print("replaced_image is the same as the original image")
-
-
+                    sys.exit()
+            
                 # 不变copy,用做比较
                 # original_file_path = os.path.join(self.original_path, 
                 #                                   file_name_split+"_original.png")
@@ -272,7 +273,7 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
                 # print(f"Blurred image saved as {os.path.basename(blur_file_path)}")
                 # print(f"Original image saved as {os.path.basename(original_file_path)}")
                 # print("---------------------------------------------------")
-                # print("---------------------------------------------")
+                # print("---------------------------------------------") 
             else:
                 continue
 
@@ -306,8 +307,25 @@ def remove_files(folder_path: str, keyword: str):
 
     
         
-if "__main__" == __name__:
+# if "__main__" == __name__:
     
+#     for file in os.listdir("./test"):
+#         condition = {
+#                     "condition 1": lambda file: not file.startswith("."),
+#                     # contain no "mis" e.g. "hello_mis_shifted", "mis_rotated"
+#                     "condition 2": lambda file: "mis" not in file
+#                     }            
+#         if all(cond(file) for cond in condition.values()):
+#             full_file_path= os.path.join("./test", file)
+#             Secondary_Knife_Folder = DataArgumentation_art_mislabelled(full_file_path)
+#             Secondary_Knife_Folder.new_data_argumentation()
+#         else:
+#             continue
+        
+#     remove_files("./test", "mis")
+
+
+def main():
     for file in os.listdir("./test"):
         condition = {
                     "condition 1": lambda file: not file.startswith("."),
@@ -316,13 +334,13 @@ if "__main__" == __name__:
                     }            
         if all(cond(file) for cond in condition.values()):
             full_file_path= os.path.join("./test", file)
-            print("full_file_path: ", full_file_path)
             Secondary_Knife_Folder = DataArgumentation_art_mislabelled(full_file_path)
             Secondary_Knife_Folder.new_data_argumentation()
         else:
             continue
         
     remove_files("./test", "mis")
+    
         
 
 
