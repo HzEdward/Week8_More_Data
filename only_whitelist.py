@@ -4,7 +4,7 @@
 # 仅在白名单中
 # ["train/blacklist", "train/whitelist", "test/blacklist", "test/whitelist"]
 # Class: **Secondary Knife**, Imbalance Report: {'distribution': [0.0, 4.375, 0.0, 10.0]}
-# 4.375 / 100 * 320 = 14， 10 / 100 * 320 = 32, split_ratio = 14/46=0.3043, image_required = 46/4=11.5, so 12 images are required
+# 4.375 / 100 * 160 = 7, 10 / 100 * 320 = 32, split_ratio = 14/46=0.3043, image_required = 46/4=11.5, so 12 images are required
 # Class: **Secondary Knife Handle**, Imbalance Report: {'distribution': [0.0, 3.125, 0.0, 2.5]}
 # 3.125 / 100 * 320 = 10， 2.5 / 100 * 320 = 8, total 18, split_ratio = 10/18=0.5556, image_required = 18/4=4.5, so 5 images are required
 # Class: **Lens Injector Handle**, Imbalance Report: {'distribution': [0.0, 1.875, 0.0, 2.5]}
@@ -29,7 +29,6 @@ from data_argumentation.data_argumentation import check_same_image
 # 给定类别的图像，从./data.csv中提取含有该类别的图像路径：如果某一行的该类别的值不为0且blacklist为0，则将该行的img_path加入到列表中
 # 输入：类别名称，data.csv地址，需要提取的地址数量。
 # 输出：含有该类别的图像路径列表
-
 def get_image_list(class_name, data_csv, num):
     """
     获取指定类别的图像列表。
@@ -49,6 +48,8 @@ def get_image_list(class_name, data_csv, num):
     image_list = class_data['img_path'].tolist()
     image_list = image_list[:num]
     return image_list
+
+
 # 输入：获取完成的图像路径列表之后，将列表中的图片以及对应的mask复制到不同的文件夹中。
 # 输出：创建文件夹，将图像和mask复制到不同的文件夹中。
 def copy_image_unused(image_list, class_name):
