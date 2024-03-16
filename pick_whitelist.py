@@ -285,10 +285,9 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
                     sys.exit()
             else:
                 continue
-
-     
-if "__main__" == __name__:
     
+if "__main__" == __name__:
+    # list layer是blacklist layer
     for file in os.listdir("./test"):
         condition = {
                     "condition 1": lambda file: not file.startswith("."),
