@@ -56,7 +56,7 @@ class DataArgumentation:
         tensor_image = transforms.ToTensor()(image)
         rotation_transform = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.RandomRotation(angle),
+            transforms.RandomRotation((angle, angle+0.1)),
             transforms.ToTensor()
         ])
         rotated_image = rotation_transform(tensor_image)
@@ -177,10 +177,10 @@ def check_same_image(img1_path, img2_path):
         difference = cv2.subtract(img1, img2)
         b, g, r = cv2.split(difference)
         if cv2.countNonZero(b) == 0 and cv2.countNonZero(g) == 0 and cv2.countNonZero(r) == 0:
-            print("The images are completely Equal")
+            # print("The images are completely Equal")
             return True
         else:
-            print("The images are NOT equal")
+            # print("The images are NOT equal")
             return False
     else:
         print("The images are NOT equal")
