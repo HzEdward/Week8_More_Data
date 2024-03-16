@@ -51,7 +51,6 @@ def get_image_list(class_name, data_csv, num):
     image_list = class_data['img_path'].tolist()
     image_list = image_list[:num]
     return image_list
-
 # 输入：获取完成的图像路径列表之后，将列表中的图片以及对应的mask复制到不同的文件夹中。
 # 输出：创建文件夹，将图像和mask复制到不同的文件夹中。
 def copy_image_unused(image_list, class_name):
@@ -106,14 +105,19 @@ def split_train_test(folder_path: str, train_ratio: float):
     image_list = [image for image in image_list if not image.startswith(".")]
     random.shuffle(image_list)
     train_list = image_list[:int(len(image_list) * train_ratio)]
-    print("train_list: ", train_list)
+    print(f"length of train_list: {len(train_list)}")
     test_list = image_list[int(len(image_list) * train_ratio):]
-    print("test_list: ", test_list)
+    print(f"length of test_list: {len(test_list)}")
+    # test whether there is overlap between train_list and test_list
+    for i in train_list:
+        if i in test_list:
+            print("overlap")
+            sys.exit()
     for image in train_list:
         shutil.move(os.path.join(folder_path, image), os.path.join(folder_path, "train", image))
     for image in test_list:
         shutil.move(os.path.join(folder_path, image), os.path.join(folder_path, "test", image))
-
+    
 def remove_files(folder_path: str, keyword: str):
     """
     删除文件夹中的mis文件夹
@@ -140,7 +144,23 @@ def remove_files(folder_path: str, keyword: str):
                 shutil.rmtree(os.path.join(folder_path, file))
             else:
                 continue
-   
+
+def artifical_blacklist(class_name: str, num: int, data_csv : str):
+    copy_image(class_name, get_image_list(class_name, data_csv, num))
+    for file in os.listdir(f"./{class_name}"):
+        condition = {
+                    "condition 1": lambda file: not file.startswith("."),
+                    "condition 2": lambda file: "mis" not in file
+                    }            
+        if all(cond(file) for cond in condition.values()):
+            full_file_path= os.path.join(f"./{class_name}", file)
+            class_name_Folder = DataArgumentation_art_mislabelled(full_file_path)
+            class_name_Folder.new_data_argumentation()
+        else:
+            continue
+    remove_files(f"./{class_name}", "original")
+    split_train_test(f"./{class_name}", 0.8)
+
 # a new class based on DataArgumentation
 class DataArgumentation_art_mislabelled(DataArgumentation):
     def __init__(self, folder_path):
@@ -325,25 +345,36 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
                 continue
     
 if "__main__" == __name__:
-    copy_image("Secondary Knife", get_image_list("Secondary Knife", "./data.csv", 14))
+    '''
+    # copy_image("Secondary Knife", get_image_list("Secondary Knife", "./data.csv", 14))
+    # # # 人为制造包含这些类的黑名单
+    # # # list layer是blacklist layer
 
-    # 人为制造包含这些类的黑名单
-    # list layer是blacklist layer
-    for file in os.listdir("./Secondary Knife"):
-        condition = {
-                    "condition 1": lambda file: not file.startswith("."),
-                    # contain no "mis" e.g. "hello_mis_shifted", "mis_rotated"
-                    "condition 2": lambda file: "mis" not in file
-                    }            
-        if all(cond(file) for cond in condition.values()):
-            full_file_path= os.path.join("./test", file)
-            Secondary_Knife_Folder = DataArgumentation_art_mislabelled(full_file_path)
-            Secondary_Knife_Folder.new_data_argumentation()
-        else:
-            continue   
-    remove_files("./test", "mis")
-    
-    split_train_test("./Secondary Knife", 0.8)
+    # for file in os.listdir("./Secondary Knife"):
+    #     condition = {
+    #                 "condition 1": lambda file: not file.startswith("."),
+    #                 "condition 2": lambda file: "mis" not in file
+    #                 }            
+    #     if all(cond(file) for cond in condition.values()):
+    #         full_file_path= os.path.join("./Secondary Knife", file)
+    #         Secondary_Knife_Folder = DataArgumentation_art_mislabelled(full_file_path)
+    #         Secondary_Knife_Folder.new_data_argumentation()
+    #     else:
+    #         continue   
+    # remove_files("./Secondary Knife", "original")
+    # split_train_test("./Secondary Knife", 0.8)
+    '''
+
+    artifical_blacklist("Secondary Knife", 14, "./data.csv")
+    print("Secondary Knife done")
+    artifical_blacklist("Secondary Knife Handle", 10, "./data.csv")
+    print("Secondary Knife Handle done")
+    artifical_blacklist("Lens Injector Handle", 6, "./data.csv")
+    print("Lens Injector Handle done")
+    artifical_blacklist("Primary Knife Handle", 2, "./data.csv")
+    print("Primary Knife Handle done")
+
+
 
 
 
