@@ -146,6 +146,22 @@ def remove_files(folder_path: str, keyword: str):
                 continue
 
 def artifical_blacklist(class_name: str, num: int, data_csv : str):
+    """
+    对给定的类别应用人工黑名单，包括以下步骤：
+    1. 从该类别中复制指定数量的图像到新的目录。
+    2. 对复制的图像应用数据增强。
+    3. 从原始目录中删除复制的图像。
+    4. 将剩余的图像分割为训练集和测试集。
+
+    参数：
+        class_name (str): 要应用黑名单的类别名称。
+        num (int): 要复制和应用数据增强的图像数量。
+        data_csv (str): 包含数据的CSV文件的路径。
+
+    返回值：
+        None
+    """
+
     copy_image(class_name, get_image_list(class_name, data_csv, num))
     for file in os.listdir(f"./{class_name}"):
         condition = {
@@ -365,6 +381,8 @@ if "__main__" == __name__:
     # split_train_test("./Secondary Knife", 0.8)
     '''
 
+
+    '''
     artifical_blacklist("Secondary Knife", 14, "./data.csv")
     print("Secondary Knife done")
     artifical_blacklist("Secondary Knife Handle", 10, "./data.csv")
@@ -373,7 +391,7 @@ if "__main__" == __name__:
     print("Lens Injector Handle done")
     artifical_blacklist("Primary Knife Handle", 2, "./data.csv")
     print("Primary Knife Handle done")
-
+    '''
 
 
 
