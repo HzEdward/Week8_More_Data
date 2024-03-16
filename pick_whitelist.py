@@ -76,6 +76,33 @@ def copy_image(class_name: str, list_name: list):
         shutil.copyfile("../segmentation/"+i, folder_path + '/' + "image_"+ image_name)
         shutil.copyfile("../segmentation/"+mask_path, folder_path + '/' + "label_"+ mask_name)
 
+def remove_files(folder_path: str, keyword: str):
+    """
+    删除文件夹中的mis文件夹
+
+    Args:
+        folder_path (str): 要删除含有mis文件夹的文件夹路径。
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
+    if keyword == "mis":
+        for file in os.listdir(folder_path):
+            if file.__contains__("mis"):
+                shutil.rmtree(os.path.join(folder_path, file))
+            else:
+                continue
+            
+    elif keyword == "original":
+        for file in os.listdir(folder_path):
+            if not file.__contains__("mis"):
+                shutil.rmtree(os.path.join(folder_path, file))
+            else:
+                continue
+   
 # a new class based on DataArgumentation
 class DataArgumentation_art_mislabelled(DataArgumentation):
     def __init__(self, folder_path):
@@ -256,76 +283,12 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
                 if check_same_image(file_path, replaced_file_path) == True:
                     print("replaced_image is the same as the original image")
                     sys.exit()
-            
-                # 不变copy,用做比较
-                # original_file_path = os.path.join(self.original_path, 
-                #                                   file_name_split+"_original.png")
-                # self.create_directories(self.original_path)
-                # cv2.imwrite(original_file_path, image)
-
-                # print(f"Data augmentation completed for {file_name}.")
-                # print("---------------------------------------------------")
-                # print(f"Flipped image saved as {os.path.basename(flipped_file_path)}")
-                # print(f"Rotated image saved as {os.path.basename(rotated_file_path)}")
-                # print(f"Brightness adjusted image saved as {os.path.basename(brightness_file_path)}")
-                # print(f"Contrast adjusted image saved as {os.path.basename(contrast_file_path)}")
-                # print(f"Noise added image saved as {os.path.basename(noisy_file_path)}")
-                # print(f"Blurred image saved as {os.path.basename(blur_file_path)}")
-                # print(f"Original image saved as {os.path.basename(original_file_path)}")
-                # print("---------------------------------------------------")
-                # print("---------------------------------------------") 
             else:
                 continue
 
-def remove_files(folder_path: str, keyword: str):
-    """
-    删除文件夹中的mis文件夹
-
-    Args:
-        folder_path (str): 要删除含有mis文件夹的文件夹路径。
-
-    Returns:
-        None
-
-    Raises:
-        None
-    """
-    if keyword == "mis":
-        for file in os.listdir(folder_path):
-            if file.__contains__("mis"):
-                shutil.rmtree(os.path.join(folder_path, file))
-            else:
-                continue
-            
-    elif keyword == "original":
-        for file in os.listdir(folder_path):
-            if not file.__contains__("mis"):
-                shutil.rmtree(os.path.join(folder_path, file))
-            else:
-                continue
-        
-
+     
+if "__main__" == __name__:
     
-        
-# if "__main__" == __name__:
-    
-#     for file in os.listdir("./test"):
-#         condition = {
-#                     "condition 1": lambda file: not file.startswith("."),
-#                     # contain no "mis" e.g. "hello_mis_shifted", "mis_rotated"
-#                     "condition 2": lambda file: "mis" not in file
-#                     }            
-#         if all(cond(file) for cond in condition.values()):
-#             full_file_path= os.path.join("./test", file)
-#             Secondary_Knife_Folder = DataArgumentation_art_mislabelled(full_file_path)
-#             Secondary_Knife_Folder.new_data_argumentation()
-#         else:
-#             continue
-        
-#     remove_files("./test", "mis")
-
-
-def main():
     for file in os.listdir("./test"):
         condition = {
                     "condition 1": lambda file: not file.startswith("."),
@@ -337,9 +300,10 @@ def main():
             Secondary_Knife_Folder = DataArgumentation_art_mislabelled(full_file_path)
             Secondary_Knife_Folder.new_data_argumentation()
         else:
-            continue
-        
+            continue   
     remove_files("./test", "mis")
+
+
     
         
 
