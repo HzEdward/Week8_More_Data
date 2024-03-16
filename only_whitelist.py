@@ -61,9 +61,11 @@ def get_image_list(class_name, data_csv, num):
     
     data = pd.read_csv(data_csv)
     class_data = data[data[class_name] != 0]
+    #! 必须要是白名单
     class_data = class_data[class_data['blacklisted'] == 0]
     image_list = class_data['img_path'].tolist()
     image_list = image_list[:num]
+    print(f"image_list: {image_list}")
     return image_list
 
 # 输入：获取完成的图像路径列表之后，将列表中的图片以及对应的mask复制到不同的文件夹中。
@@ -397,15 +399,15 @@ if "__main__" == __name__:
 
 # Class: **Secondary Knife Handle**, Imbalance Report: {'distribution': [0.0, 3.125, 0.0, 2.5]}
 # 3.125/100*160=5, 2.5/100*40=1, total 6, split_ratio = 5/6=0.8333, image_required = 6/4=1.5, so 2 images are required
-    artifical_blacklist("Secondary Knife Handle", 2, "./data.csv", 0.8333)
+    # artifical_blacklist("Secondary Knife Handle", 2, "./data.csv", 0.8333)
 
 # Class: **Lens Injector Handle**, Imbalance Report: {'distribution': [0.0, 1.875, 0.0, 2.5]}
 # 1.875/100*160=3, 2.5/100*40=1, total 4, split_ratio = 3/4=0.75, image_required = 4/4=1, so 1 images are required
-    artifical_blacklist("Lens Injector Handle", 2, "./data.csv", 0.75)
+    # artifical_blacklist("Lens Injector Handle", 2, "./data.csv", 0.75)
 
 # Class: **Primary Knife Handle**, Imbalance Report: {'distribution': [0.0, 0.625, 0.0, 2.5]}
 # 0.625/100*160=1, 2.5/100*40=1, total 2, split_ratio = 1/2=0.5, image_required = 1/1=1, so 1 images are required
-    artifical_blacklist("Primary Knife Handle", 2, "./data.csv", 0.5)
+    # artifical_blacklist("Primary Knife Handle", 2, "./data.csv", 0.5)
 
     
 
