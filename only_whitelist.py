@@ -1,17 +1,34 @@
 #**原始数据集：**
 # 训练数据集：320（160黑名单，160白名单）
 # 验证数据集：80（40黑名单，40白名单）
-# 仅在白名单中
-# ["train/blacklist", "train/whitelist", "test/blacklist", "test/whitelist"]
+
+#* 仅在白名单中, 所以需要人为制造黑名单数据
+#* ["train/blacklist", "train/whitelist", "test/blacklist", "test/whitelist"]
 # Class: **Secondary Knife**, Imbalance Report: {'distribution': [0.0, 4.375, 0.0, 10.0]}
-# 4.375 / 100 * 160 = 7, 10 / 100 * 320 = 32, split_ratio = 14/46=0.3043, image_required = 46/4=11.5, so 12 images are required
+# 4.375/100*160=7, 10/100*40=4, total 11, split_ratio = 7/11=0.6363, image_required = 11/4=2.75, so 3 images are required
+
 # Class: **Secondary Knife Handle**, Imbalance Report: {'distribution': [0.0, 3.125, 0.0, 2.5]}
-# 3.125 / 100 * 320 = 10， 2.5 / 100 * 320 = 8, total 18, split_ratio = 10/18=0.5556, image_required = 18/4=4.5, so 5 images are required
+# 3.125/100*160=5, 2.5/100*40=1, total 6, split_ratio = 5/6=0.8333, image_required = 6/4=1.5, so 2 images are required
+
 # Class: **Lens Injector Handle**, Imbalance Report: {'distribution': [0.0, 1.875, 0.0, 2.5]}
-# 1.875 / 100 * 320 = 6， 2.5 / 100 * 320 = 8, total 14, split_ratio = 6/14=0.4286, image_required = 14/4=3.5, so 4 images are required
+# 1.875/100*160=3, 2.5/100*40=1, total 4, split_ratio = 3/4=0.75, image_required = 4/4=1, so 1 images are required
+
 # Class: **Primary Knife Handle**, Imbalance Report: {'distribution': [0.0, 0.625, 0.0, 2.5]}
-# 0.625 / 100 * 320 = 2， 2.5 / 100 * 320 = 8, total 10, split_ratio = 2/10=0.2, image_required = 10/4=2.5, so 3 images are required
-# 解决方案：加入黑名单数据, 人为制造包含这些类的黑名单
+# 0.625/100*160=1, 2.5/100*40=1, total 2, split_ratio = 1/2=0.5, image_required = 1/1=1, so 1 images are required
+'''
+length of train_list: 7
+length of test_list: 5
+
+length of train_list: 6
+length of test_list: 2
+
+length of train_list: 6
+length of test_list: 2
+
+length of train_list: 4
+length of test_list: 4
+'''
+
 
 import pandas as pd
 import os
@@ -49,7 +66,6 @@ def get_image_list(class_name, data_csv, num):
     image_list = image_list[:num]
     return image_list
 
-
 # 输入：获取完成的图像路径列表之后，将列表中的图片以及对应的mask复制到不同的文件夹中。
 # 输出：创建文件夹，将图像和mask复制到不同的文件夹中。
 def copy_image_unused(image_list, class_name):
@@ -76,11 +92,16 @@ def copy_image(class_name: str, list_name: list):
     """
     for index, i in enumerate(list_name, start=1):
         image_name = i.split('/')[-1]
+        print(f"image_name: {image_name}")
         folder_name = f"image_pair_{index}"
+        print(f"folder_name: {folder_name}")
         mask_path = i.replace('Images', 'Labels')
+        print(f"mask_path: {mask_path}")
         mask_name = mask_path.split('/')[-1]
-        # 将surgical_tape_list编程class_name
+        print(f"mask_name: {mask_name}")
         folder_path = './' + class_name + '/' + folder_name
+        print(f"folder_path: {folder_path}")
+        print(f"../segmentation/{i}, {folder_path + '/' + 'image_'+ image_name}")
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
         shutil.copyfile("../segmentation/"+i, folder_path + '/' + "image_"+ image_name)
@@ -112,9 +133,14 @@ def split_train_test(folder_path: str, train_ratio: float):
         if i in test_list:
             print("overlap")
             sys.exit()
+    print("folder_path: ", folder_path)
+    print("train_list: ", train_list)
+    print("test_list: ", test_list)
     for image in train_list:
+        print(f"shutil.move({os.path.join(folder_path, image)}, {os.path.join(folder_path, 'train', image)})")
         shutil.move(os.path.join(folder_path, image), os.path.join(folder_path, "train", image))
     for image in test_list:
+        print(f"shutil.move({os.path.join(folder_path, image)}, {os.path.join(folder_path, 'test', image)})")
         shutil.move(os.path.join(folder_path, image), os.path.join(folder_path, "test", image))
     
 def remove_files(folder_path: str, keyword: str):
@@ -361,13 +387,26 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
     
 if "__main__" == __name__:
 
-    # each original image artifical generate 4 new "mislabelled" images
-    # since 46 images are required, 46/4 = 11.5, so 12 images are required
-    artifical_blacklist("Secondary Knife", 12, "./data.csv", 0.3043)
-    artifical_blacklist("Secondary Knife Handle", 5, "./data.csv", 0.5556)
-    artifical_blacklist("Lens Injector Handle", 4, "./data.csv", 0.4286)
-    artifical_blacklist("Primary Knife Handle", 3, "./data.csv", 0.2)
+# each original image artifical generate 4 new "mislabelled" images
+# Class: **Secondary Knife**, Imbalance Report: {'distribution': [0.0, 4.375, 0.0, 10.0]}
+# 4.375/100*160=7, 10/100*40=4, total 11, split_ratio = 7/11=0.6363, image_required = 11/4=2.75, so 3 images are required
+    artifical_blacklist("Secondary Knife", 3, "./data.csv", 0.6363)
+
+# Class: **Secondary Knife Handle**, Imbalance Report: {'distribution': [0.0, 3.125, 0.0, 2.5]}
+# 3.125/100*160=5, 2.5/100*40=1, total 6, split_ratio = 5/6=0.8333, image_required = 6/4=1.5, so 2 images are required
+    artifical_blacklist("Secondary Knife Handle", 2, "./data.csv", 0.8333)
+
+# Class: **Lens Injector Handle**, Imbalance Report: {'distribution': [0.0, 1.875, 0.0, 2.5]}
+# 1.875/100*160=3, 2.5/100*40=1, total 4, split_ratio = 3/4=0.75, image_required = 4/4=1, so 1 images are required
+    artifical_blacklist("Lens Injector Handle", 2, "./data.csv", 0.75)
+
+# Class: **Primary Knife Handle**, Imbalance Report: {'distribution': [0.0, 0.625, 0.0, 2.5]}
+# 0.625/100*160=1, 2.5/100*40=1, total 2, split_ratio = 1/2=0.5, image_required = 1/1=1, so 1 images are required
+    artifical_blacklist("Primary Knife Handle", 2, "./data.csv", 0.5)
+
     
+
+
     '''
     # copy_image("Secondary Knife", get_image_list("Secondary Knife", "./data.csv", 14))
     # # # 人为制造包含这些类的黑名单
