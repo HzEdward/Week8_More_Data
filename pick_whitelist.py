@@ -1,20 +1,18 @@
 #**原始数据集：**
-
 # 训练数据集：320（160黑名单，160白名单）
-
 # 验证数据集：80（40黑名单，40白名单）
-
 # 仅在白名单中
 # ["train/blacklist", "train/whitelist", "test/blacklist", "test/whitelist"]
 # Class: **Secondary Knife**, Imbalance Report: {'distribution': [0.0, 4.375, 0.0, 10.0]}
-# 4.375 / 100 * 320 = 14， 10 / 100 * 320 = 32
+# 4.375 / 100 * 320 = 14， 10 / 100 * 320 = 32, split_ratio = 14/46=0.3043, image_required = 46/4=11.5, so 12 images are required
 # Class: **Secondary Knife Handle**, Imbalance Report: {'distribution': [0.0, 3.125, 0.0, 2.5]}
-# 3.125 / 100 * 320 = 10， 2.5 / 100 * 320 = 8
+# 3.125 / 100 * 320 = 10， 2.5 / 100 * 320 = 8, total 18, split_ratio = 10/18=0.5556, image_required = 18/4=4.5, so 5 images are required
 # Class: **Lens Injector Handle**, Imbalance Report: {'distribution': [0.0, 1.875, 0.0, 2.5]}
-# 1.875 / 100 * 320 = 6， 2.5 / 100 * 320 = 8
+# 1.875 / 100 * 320 = 6， 2.5 / 100 * 320 = 8, total 14, split_ratio = 6/14=0.4286, image_required = 14/4=3.5, so 4 images are required
 # Class: **Primary Knife Handle**, Imbalance Report: {'distribution': [0.0, 0.625, 0.0, 2.5]}
-# 0.625 / 100 * 320 = 2， 2.5 / 100 * 320 = 8
+# 0.625 / 100 * 320 = 2， 2.5 / 100 * 320 = 8, total 10, split_ratio = 2/10=0.2, image_required = 10/4=2.5, so 3 images are required
 # 解决方案：加入黑名单数据, 人为制造包含这些类的黑名单
+
 import pandas as pd
 import os
 import shutil
@@ -145,7 +143,7 @@ def remove_files(folder_path: str, keyword: str):
             else:
                 continue
 
-def artifical_blacklist(class_name: str, num: int, data_csv : str):
+def artifical_blacklist(class_name: str, num: int, data_csv : str, split_ratio: float):
     """
     对给定的类别应用人工黑名单，包括以下步骤：
     1. 从该类别中复制指定数量的图像到新的目录。
@@ -175,7 +173,7 @@ def artifical_blacklist(class_name: str, num: int, data_csv : str):
         else:
             continue
     remove_files(f"./{class_name}", "original")
-    split_train_test(f"./{class_name}", 0.8)
+    split_train_test(f"./{class_name}", split_ratio)
 
 # a new class based on DataArgumentation
 class DataArgumentation_art_mislabelled(DataArgumentation):
@@ -361,6 +359,14 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
                 continue
     
 if "__main__" == __name__:
+
+    # each original image artifical generate 4 new "mislabelled" images
+    # since 46 images are required, 46/4 = 11.5, so 12 images are required
+    artifical_blacklist("Secondary Knife", 12, "./data.csv", 0.3043)
+    artifical_blacklist("Secondary Knife Handle", 5, "./data.csv", 0.5556)
+    artifical_blacklist("Lens Injector Handle", 4, "./data.csv", 0.4286)
+    artifical_blacklist("Primary Knife Handle", 3, "./data.csv", 0.2)
+    
     '''
     # copy_image("Secondary Knife", get_image_list("Secondary Knife", "./data.csv", 14))
     # # # 人为制造包含这些类的黑名单
@@ -382,16 +388,8 @@ if "__main__" == __name__:
     '''
 
 
-    '''
-    artifical_blacklist("Secondary Knife", 14, "./data.csv")
-    print("Secondary Knife done")
-    artifical_blacklist("Secondary Knife Handle", 10, "./data.csv")
-    print("Secondary Knife Handle done")
-    artifical_blacklist("Lens Injector Handle", 6, "./data.csv")
-    print("Lens Injector Handle done")
-    artifical_blacklist("Primary Knife Handle", 2, "./data.csv")
-    print("Primary Knife Handle done")
-    '''
+
+
 
 
 
