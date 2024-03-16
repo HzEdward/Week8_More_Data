@@ -33,17 +33,29 @@ from data_argumentation.data_argumentation import check_same_image
 # 输出：含有该类别的图像路径列表
 
 def get_image_list(class_name, data_csv, num):
+    """
+    获取指定类别的图像列表。
+
+    参数：
+    class_name (str): 类别名称。
+    data_csv (str): 数据文件的路径。
+    num (int): 返回的图像数量。
+
+    返回值：
+    list: 包含指定类别图像路径的列表。
+    """
+    
     data = pd.read_csv(data_csv)
     class_data = data[data[class_name] != 0]
     class_data = class_data[class_data['blacklisted'] == 0]
     image_list = class_data['img_path'].tolist()
     image_list = image_list[:num]
     return image_list
+
 # 输入：获取完成的图像路径列表之后，将列表中的图片以及对应的mask复制到不同的文件夹中。
 # 输出：创建文件夹，将图像和mask复制到不同的文件夹中。
 def copy_image_unused(image_list, class_name):
     for img in image_list:
-    
         img_name = img.split('/')[-1]
         mask_name = img_name.split('.')[0] + '_mask.png'
         shutil.copy(img, '.whitelist_pick/train/whitelist/' + class_name + '/' + img_name)
@@ -75,6 +87,32 @@ def copy_image(class_name: str, list_name: list):
             os.makedirs(folder_path)
         shutil.copyfile("../segmentation/"+i, folder_path + '/' + "image_"+ image_name)
         shutil.copyfile("../segmentation/"+mask_path, folder_path + '/' + "label_"+ mask_name)
+
+def split_train_test(folder_path: str, train_ratio: float):
+    """
+    将给定文件夹中的图像和遮罩按照指定的比例分割成训练集和测试集。
+
+    Args:
+        folder_path (str): 包含图像和遮罩的文件夹路径。
+        train_ratio (float): 训练集的比例。
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
+    image_list = os.listdir(folder_path)
+    image_list = [image for image in image_list if not image.startswith(".")]
+    random.shuffle(image_list)
+    train_list = image_list[:int(len(image_list) * train_ratio)]
+    print("train_list: ", train_list)
+    test_list = image_list[int(len(image_list) * train_ratio):]
+    print("test_list: ", test_list)
+    for image in train_list:
+        shutil.move(os.path.join(folder_path, image), os.path.join(folder_path, "train", image))
+    for image in test_list:
+        shutil.move(os.path.join(folder_path, image), os.path.join(folder_path, "test", image))
 
 def remove_files(folder_path: str, keyword: str):
     """
@@ -287,8 +325,11 @@ class DataArgumentation_art_mislabelled(DataArgumentation):
                 continue
     
 if "__main__" == __name__:
+    copy_image("Secondary Knife", get_image_list("Secondary Knife", "./data.csv", 14))
+
+    # 人为制造包含这些类的黑名单
     # list layer是blacklist layer
-    for file in os.listdir("./test"):
+    for file in os.listdir("./Secondary Knife"):
         condition = {
                     "condition 1": lambda file: not file.startswith("."),
                     # contain no "mis" e.g. "hello_mis_shifted", "mis_rotated"
@@ -301,6 +342,11 @@ if "__main__" == __name__:
         else:
             continue   
     remove_files("./test", "mis")
+    
+    split_train_test("./Secondary Knife", 0.8)
+
+
+
 
 
     
